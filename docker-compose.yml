@@ -10,9 +10,12 @@ services:
       - "traefik.enable=true"
       # Define the routing rule: 
       # - Requests to whoknows.localhost with /api/legacy prefix will be routed here
-      - "traefik.http.routers.legacy-backend.rule=Host(`whoknows.localhost`) && PathPrefix(`/api/legacy`)"
+      - "traefik.http.routers.legacy-backend.rule=Host(`whoknows.localhost`) && PathPrefix(`/legacy`)"
       # Tell Traefik which internal port to forward requests to
       - "traefik.http.services.legacy-backend.loadbalancer.server.port=8080"
+      # Strip the /legacy prefix from the URL so that the backend can handle it
+      - "traefik.http.middlewares.strip-legacy-prefix.stripprefix.prefixes=/legacy"
+      - "traefik.http.routers.legacy-backend.middlewares=strip-legacy-prefix@docker"
     networks:
       - whoknows-network
 
@@ -25,9 +28,12 @@ services:
       - "traefik.enable=true"
       # Define the routing rule:
       # - Requests to whoknows.localhost with /api/new prefix will be routed here
-      - "traefik.http.routers.new-backend.rule=Host(`whoknows.localhost`) && PathPrefix(`/api/new`)"
+      - "traefik.http.routers.new-backend.rule=Host(`whoknows.localhost`) && PathPrefix(`/new`)"
       # Tell Traefik which internal port to forward requests to
       - "traefik.http.services.new-backend.loadbalancer.server.port=8080"
+      # Strip the /new prefix from the URL so that the backend can handle it
+      - "traefik.http.middlewares.strip-new-prefix.stripprefix.prefixes=/new"
+      - "traefik.http.routers.new-backend.middlewares=strip-new-prefix@docker"
     env_file:
       - .env
     networks:
