@@ -6,7 +6,7 @@ COPY ../backend/requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY ../backend .
-COPY ../schema.sql .
+COPY ../schema.sql ../schema.sql
 
 RUN python -c "from app import init_db; init_db()"
 
