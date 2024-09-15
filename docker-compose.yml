@@ -6,8 +6,12 @@ services:
       context: ./legacycode/src
       dockerfile: backend/Dockerfile
     labels:
+      # Enable Traefik for this service
       - "traefik.enable=true"
+      # Define the routing rule: 
+      # - Requests to whoknows.localhost with /api/legacy prefix will be routed here
       - "traefik.http.routers.legacy-backend.rule=Host(`whoknows.localhost`) && PathPrefix(`/api/legacy`)"
+      # Tell Traefik which internal port to forward requests to
       - "traefik.http.services.legacy-backend.loadbalancer.server.port=8080"
     networks:
       - whoknows-network
@@ -17,9 +21,15 @@ services:
       context: ./backend/API
       dockerfile: Dockerfile
     labels:
+      # Enable Traefik for this service
       - "traefik.enable=true"
+      # Define the routing rule:
+      # - Requests to whoknows.localhost with /api/new prefix will be routed here
       - "traefik.http.routers.new-backend.rule=Host(`whoknows.localhost`) && PathPrefix(`/api/new`)"
+      # Tell Traefik which internal port to forward requests to
       - "traefik.http.services.new-backend.loadbalancer.server.port=8080"
+    env_file:
+      - .env
     networks:
       - whoknows-network
 
@@ -28,23 +38,37 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     labels:
+      # Enable Traefik for this service
       - "traefik.enable=true"
+      # Define the routing rule:
+      # - All requests to whoknows.localhost (without specific prefixes) will be routed here
       - "traefik.http.routers.frontend.rule=Host(`whoknows.localhost`)"
+      # Tell Traefik which internal port to forward requests to
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
     networks:
       - whoknows-network
 
   traefik:
+    # Use Traefik v2.10 as the reverse proxy and load balancer
     image: traefik:v2.10
     command:
+      # Enable Traefik's dashboard (accessible at port 8080)
+      # Warning: This is insecure for production. Use with caution.
       - "--api.insecure=true"
+      # Tell Traefik to watch Docker events for automatic service discovery
       - "--providers.docker=true"
+      # Don't expose all Docker containers by default (only those with traefik.enable=true)
       - "--providers.docker.exposedbydefault=false"
+      # Define the main entrypoint for HTTP traffic on port 80
       - "--entrypoints.web.address=:80"
     ports:
+      # Expose HTTP port
       - "80:80"
+      # Expose Traefik's dashboard port
       - "8080:8080"
     volumes:
+      # Mount Docker socket to allow Traefik to read container configurations
+      # This is read-only for security
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - whoknows-network
