@@ -3,8 +3,8 @@ version: '3'
 services:
   legacy-backend:
     build:
-      context: ./legacycode/src
-      dockerfile: backend/Dockerfile
+      context: ./legacycode/src/backend
+      dockerfile: Dockerfile
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.legacy-backend.rule=Host(`whoknows.localhost`) && PathPrefix(`/api/legacy`)"
