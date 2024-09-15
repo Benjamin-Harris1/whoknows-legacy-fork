@@ -2,11 +2,11 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY ../backend/requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY . .
-COPY ../schema.sql /app/schema.sql
+COPY ../backend .
+COPY ../schema.sql .
 
 RUN python -c "from app import init_db; init_db()"
 
