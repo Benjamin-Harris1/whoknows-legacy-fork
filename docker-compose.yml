@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  legacy-backend:
+    build:
+      context: ./legacycode/src/backend
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.legacy-backend.rule=Host(`whoknows.localhost`) && PathPrefix(`/api/legacy`)"
+      - "traefik.http.services.legacy-backend.loadbalancer.server.port=8080"
+    networks:
+      - whoknows-network
+
+  new-backend:
+    build:
+      context: ./backend/API
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.new-backend.rule=Host(`whoknows.localhost`) && PathPrefix(`/api/new`)"
+      - "traefik.http.services.new-backend.loadbalancer.server.port=8080"
+    networks:
+      - whoknows-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`whoknows.localhost`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    networks:
+      - whoknows-network
+
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - whoknows-network
+
+networks:
+  whoknows-network:
+    driver: bridge
